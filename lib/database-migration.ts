@@ -37,10 +37,15 @@ export class DatabaseMigrationCdkStackStack extends Stack {
       }
     });
 
+    const usersQueueConsumerLayers = new PythonLayerVersion(this, 'dm_users_queue_consumer_layer', {
+      entry: path.join(__dirname, './functions/usersQueueConsumer/layers'), // point this to your library's directory
+    })
+
     const usersQueueConsumer = new PythonFunction(this, 'dm_users_queue_consumer', {
       entry: path.join(__dirname, './functions/usersQueueConsumer/code'),
       runtime: aws_lambda.Runtime.PYTHON_3_12, // required
       handler: 'handler', // optional, defaults to 'handler'
+      layers: [usersQueueConsumerLayers]
     });
 
     const apiAuthorizer = new PythonFunction(this, 'dm_api_authorizer', {
