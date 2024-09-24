@@ -27,14 +27,14 @@ def handler(event, context):
 
     except (ValueError) as e:
         # Handle any JSON parsing or missing data errors
-        print(f"Error parsing event: {str(e)}")
+        print(f"Error polling users: {str(e)}")
         response = {
-            "statusCode": 400,
+            "statusCode": 500,
             "headers": {
                 "Content-Type": "application/json"
             },
             "body": json.dumps({
-                "message": "Error processing the event",
+                "message": "Error polling users:",
                 "error": str(e)
             })
         }

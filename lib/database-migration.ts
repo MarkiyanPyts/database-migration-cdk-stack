@@ -9,9 +9,8 @@ import {
   aws_lambda_nodejs,
   RemovalPolicy,
   Duration,
-  aws_dynamodb,
-  aws_ec2,
-  aws_ecs,
+  aws_events,
+  aws_events_targets
 } from "aws-cdk-lib";
 import {PythonFunction, PythonLayerVersion, } from "@aws-cdk/aws-lambda-python-alpha"
 import path = require('path');
@@ -37,16 +36,32 @@ export class DatabaseMigrationCdkStackStack extends Stack {
       }
     });
 
-    const usersQueueConsumerLayers = new PythonLayerVersion(this, 'dm_users_queue_consumer_layer', {
+    const usersQueueConsumer = new PythonFunction(this, 'dm_users_queue_consumer', {
+      entry: path.join(__dirname, './functions/usersQueueConsumer/code'),
+      runtime: aws_lambda.Runtime.PYTHON_3_12, // required
+      handler: 'handler',
+      timeout: Duration.minutes(5),
+    });
+
+    const pollUsersFromQueue = new PythonFunction(this, 'dm_poll_users_from_queue', {
+      entry: path.join(__dirname, './functions/pollUsersFromQueue/code'),
+      runtime: aws_lambda.Runtime.PYTHON_3_12,
+      handler: 'handler',
+      timeout: Duration.minutes(5),
+    });
+
+
+    const userProcessorJobLayers = new PythonLayerVersion(this, 'dm_user_processor_job_layer', {
       compatibleRuntimes: [aws_lambda.Runtime.PYTHON_3_12],
       entry: path.join(__dirname, './functions/usersQueueConsumer/layers'), // point this to your library's directory
     })
 
-    const usersQueueConsumer = new PythonFunction(this, 'dm_users_queue_consumer', {
+    const userProcessorJob = new PythonFunction(this, 'dm_user_processor_job', {
       entry: path.join(__dirname, './functions/usersQueueConsumer/code'),
       runtime: aws_lambda.Runtime.PYTHON_3_12, // required
       handler: 'handler', // optional, defaults to 'handler'
-      layers: [usersQueueConsumerLayers]
+      layers: [userProcessorJobLayers],
+      timeout: Duration.minutes(15),
     });
 
     const apiAuthorizer = new PythonFunction(this, 'dm_api_authorizer', {
@@ -73,6 +88,19 @@ export class DatabaseMigrationCdkStackStack extends Stack {
       "POST",
       new aws_apigateway.LambdaIntegration(usersQueueConsumer)
     );
+
+    const JobsTriggerEventBus = new aws_events.EventBus(this, 'dm_job-trigger-event-bus', {
+      eventBusName: 'dm_job-trigger-event-bus',
+    });
+
+    new aws_events.Rule(this, "dm_trigger-user-processor-job", {
+      eventBus: JobsTriggerEventBus,
+      eventPattern: {
+        source: ["trigger-user-processor-job"],
+      },
+    }).addTarget(new aws_events_targets.LambdaFunction(userProcessorJob));
+
+
     
   }
 }

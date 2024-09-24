@@ -4,10 +4,10 @@ def handler(event, context):
     try:
         # Extract 'users' from body parameters
         body = json.loads(event.get('body'))
-        users = body.get('users')
+        user_data = body.get('user_data')
 
         # Check if 'users' is empty
-        if not users:
+        if not user_data:
             raise ValueError("No users provided")
         
         # Log the users for debugging purposes
@@ -20,8 +20,8 @@ def handler(event, context):
                 "Content-Type": "application/json"
             },
             "body": json.dumps({
-                "message": "Hello from usersQueueConsumer",
-                "receivedUsers": users
+                "message": "triggered jobs for users:",
+                "users": user_data
             })
         }
 
