@@ -38,6 +38,7 @@ export class DatabaseMigrationCdkStackStack extends Stack {
     });
 
     const usersQueueConsumerLayers = new PythonLayerVersion(this, 'dm_users_queue_consumer_layer', {
+      compatibleRuntimes: [aws_lambda.Runtime.PYTHON_3_12],
       entry: path.join(__dirname, './functions/usersQueueConsumer/layers'), // point this to your library's directory
     })
 
