@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { DatabaseMigrationCdkStackStack } from '../lib/database-migration-cdk-stack-stack';
+import { DatabaseMigrationCdkStackStack } from '../lib/database-migration';
 
 const app = new cdk.App();
-new DatabaseMigrationCdkStackStack(app, 'DatabaseMigrationCdkStackStack', {
+new DatabaseMigrationCdkStackStack(app, 'DatabaseMigrationCdkStack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
