@@ -53,7 +53,7 @@ export class DatabaseMigrationCdkStackStack extends Stack {
 
     const userProcessorJobLayers = new PythonLayerVersion(this, 'dm_user_processor_job_layer', {
       compatibleRuntimes: [aws_lambda.Runtime.PYTHON_3_12],
-      entry: path.join(__dirname, './functions/usersQueueConsumer/layers'), // point this to your library's directory
+      entry: path.join(__dirname, './functions/userProcessorJob/layers'), // point this to your library's directory
     })
 
     const userProcessorJob = new PythonFunction(this, 'dm_user_processor_job', {
