@@ -2,10 +2,13 @@ import json
 
 def handler(event, context):
     try:
-        body = json.loads(event)
-        print('body', body)
         # Extract 'users' from body parameters
-        users = body.get('users', [])
+        body = json.loads(event.get('body'))
+        users = body.get('users')
+        print("Received event: " + json.dumps(event))
+        # Check if 'users' is empty
+        if not users:
+            raise ValueError("No users provided")
         
         # Log the users for debugging purposes
         print("Received users: " + json.dumps(users))
