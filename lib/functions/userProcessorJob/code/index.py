@@ -10,14 +10,9 @@ def handler(event, context):
     try:
         # Extract 'users' from body parameters
         body = json.loads(event.get('body'))
-        user_data = body.get('user_data')
-
-        # Check if 'users' is empty
-        if not user_data:
-            raise ValueError("No users provided")
         
         # Log the users for debugging purposes
-        print("Received users: " + json.dumps(users))
+        print("Job data: " + json.dumps(body))
         
         # Prepare a response
         response = {
@@ -27,7 +22,7 @@ def handler(event, context):
             },
             "body": json.dumps({
                 "message": "triggered jobs for users:",
-                "users": user_data
+                "users": body
             })
         }
 
@@ -35,12 +30,12 @@ def handler(event, context):
         # Handle any JSON parsing or missing data errors
         print(f"Error parsing event: {str(e)}")
         response = {
-            "statusCode": 400,
+            "statusCode": 500,
             "headers": {
                 "Content-Type": "application/json"
             },
             "body": json.dumps({
-                "message": "Error processing the event",
+                "message": "Error processing user",
                 "error": str(e)
             })
         }

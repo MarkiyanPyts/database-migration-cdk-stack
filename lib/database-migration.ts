@@ -20,8 +20,6 @@ export class DatabaseMigrationCdkStackStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
     // example resource
     const usersDLQ = new aws_sqs.Queue(this, 'dm_users_dl_queue', {
       removalPolicy: RemovalPolicy.DESTROY,
@@ -38,16 +36,6 @@ export class DatabaseMigrationCdkStackStack extends Stack {
 
     const usersQueueConsumer = new PythonFunction(this, 'dm_users_queue_consumer', {
       entry: path.join(__dirname, './functions/usersQueueConsumer/code'),
-      runtime: aws_lambda.Runtime.PYTHON_3_12, // required
-      handler: 'handler',
-      timeout: Duration.minutes(5),
-      environment: {
-        USERS_QUEUE_URL: usersQueue.queueUrl,
-      }
-    });
-
-    const pollUsersFromQueue = new PythonFunction(this, 'dm_poll_users_from_queue', {
-      entry: path.join(__dirname, './functions/pollUsersFromQueue/code'),
       runtime: aws_lambda.Runtime.PYTHON_3_12,
       handler: 'handler',
       timeout: Duration.minutes(5),
@@ -55,7 +43,6 @@ export class DatabaseMigrationCdkStackStack extends Stack {
         USERS_QUEUE_URL: usersQueue.queueUrl,
       }
     });
-
 
     const userProcessorJobLayers = new PythonLayerVersion(this, 'dm_user_processor_job_layer', {
       compatibleRuntimes: [aws_lambda.Runtime.PYTHON_3_12],
@@ -65,13 +52,38 @@ export class DatabaseMigrationCdkStackStack extends Stack {
     const userProcessorJob = new PythonFunction(this, 'dm_user_processor_job', {
       entry: path.join(__dirname, './functions/usersQueueConsumer/code'),
       runtime: aws_lambda.Runtime.PYTHON_3_12, // required
-      handler: 'handler', // optional, defaults to 'handler'
+      handler: 'handler',
       layers: [userProcessorJobLayers],
       timeout: Duration.minutes(15),
       environment: {
         USERS_QUEUE_URL: usersQueue.queueUrl,
       }
     });
+
+    const JobsTriggerEventBus = new aws_events.EventBus(this, 'dm_job-trigger-event-bus', {
+      eventBusName: 'dm_job-trigger-event-bus',
+    });
+
+    const JobsTriggerEventBusRule = new aws_events.Rule(this, "dm_trigger-user-processor-job", {
+      eventBus: JobsTriggerEventBus,
+      eventPattern: {
+        source: ["trigger-user-processor-job"],
+      },
+    }).addTarget(new aws_events_targets.LambdaFunction(userProcessorJob));
+
+    const pollUsersFromQueue = new PythonFunction(this, 'dm_poll_users_from_queue', {
+      entry: path.join(__dirname, './functions/pollUsersFromQueue/code'),
+      runtime: aws_lambda.Runtime.PYTHON_3_12,
+      handler: 'handler',
+      timeout: Duration.minutes(5),
+      environment: {
+        USERS_QUEUE_URL: usersQueue.queueUrl,
+        EVENT_BUS_NAME: JobsTriggerEventBus.eventBusName,
+        EVENT_SOURCE: 'trigger-user-processor-job',
+      }
+    });
+
+    JobsTriggerEventBus.grantPutEventsTo(pollUsersFromQueue)
 
     const apiAuthorizer = new PythonFunction(this, 'dm_api_authorizer', {
       entry: path.join(__dirname, './functions/authorizer/code'),
@@ -105,16 +117,7 @@ export class DatabaseMigrationCdkStackStack extends Stack {
       new aws_apigateway.LambdaIntegration(pollUsersFromQueue)
     );
 
-    const JobsTriggerEventBus = new aws_events.EventBus(this, 'dm_job-trigger-event-bus', {
-      eventBusName: 'dm_job-trigger-event-bus',
-    });
-
-    new aws_events.Rule(this, "dm_trigger-user-processor-job", {
-      eventBus: JobsTriggerEventBus,
-      eventPattern: {
-        source: ["trigger-user-processor-job"],
-      },
-    }).addTarget(new aws_events_targets.LambdaFunction(userProcessorJob));
+    
 
 
     //usersQueue give permission to pollUsersFromQueue
