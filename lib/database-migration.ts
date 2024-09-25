@@ -89,6 +89,13 @@ export class DatabaseMigrationCdkStackStack extends Stack {
       new aws_apigateway.LambdaIntegration(usersQueueConsumer)
     );
 
+    const pollUsersFromQueueAPI = api.root.addResource("poll_users_from_queue");
+
+    pollUsersFromQueueAPI.addMethod(
+      "POST",
+      new aws_apigateway.LambdaIntegration(pollUsersFromQueue)
+    );
+
     const JobsTriggerEventBus = new aws_events.EventBus(this, 'dm_job-trigger-event-bus', {
       eventBusName: 'dm_job-trigger-event-bus',
     });
@@ -100,6 +107,12 @@ export class DatabaseMigrationCdkStackStack extends Stack {
       },
     }).addTarget(new aws_events_targets.LambdaFunction(userProcessorJob));
 
+
+    //usersQueue give permission to pollUsersFromQueue
+    usersQueue.grantConsumeMessages(pollUsersFromQueue);
+    usersQueue.grantPurge(userProcessorJob);
+    
+    //userProcessorJob give permission to usersQueueConsumer
 
     
   }
