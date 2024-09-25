@@ -13,12 +13,15 @@ def handler(event, context):
 
         sqs_receipt_handle = event_details['ReceiptHandle']
         sqs_message_id = event_details['MessageId']
-        user_data = event_details['Body']
+        user_data = json.loads(event_details['Body'])
+        
         print('sqs_receipt_handle:')
         print(sqs_receipt_handle)
         print('sqs_message_id:')
         print(sqs_message_id)
-        print('user_id:')
+        print('user_data4:')
+        print(user_data)
+        print('user_id_4:')
         print(user_data['user_id'])
 
         ## do migration for this user...if transaction was success delete SQS message
