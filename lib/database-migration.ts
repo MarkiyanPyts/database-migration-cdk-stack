@@ -117,15 +117,8 @@ export class DatabaseMigrationCdkStackStack extends Stack {
       new aws_apigateway.LambdaIntegration(pollUsersFromQueue)
     );
 
-    
-
-
-
     usersQueue.grantConsumeMessages(pollUsersFromQueue);
-    usersQueue.grantPurge(userProcessorJob);
+    usersQueue.grantConsumeMessages(userProcessorJob)
     usersQueue.grantSendMessages(usersQueueConsumer)
-   
-
-    
   }
 }
