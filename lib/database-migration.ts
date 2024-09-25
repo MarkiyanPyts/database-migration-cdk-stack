@@ -41,6 +41,9 @@ export class DatabaseMigrationCdkStackStack extends Stack {
       runtime: aws_lambda.Runtime.PYTHON_3_12, // required
       handler: 'handler',
       timeout: Duration.minutes(5),
+      environment: {
+        USERS_QUEUE_URL: usersQueue.queueUrl,
+      }
     });
 
     const pollUsersFromQueue = new PythonFunction(this, 'dm_poll_users_from_queue', {
@@ -48,6 +51,9 @@ export class DatabaseMigrationCdkStackStack extends Stack {
       runtime: aws_lambda.Runtime.PYTHON_3_12,
       handler: 'handler',
       timeout: Duration.minutes(5),
+      environment: {
+        USERS_QUEUE_URL: usersQueue.queueUrl,
+      }
     });
 
 
@@ -62,6 +68,9 @@ export class DatabaseMigrationCdkStackStack extends Stack {
       handler: 'handler', // optional, defaults to 'handler'
       layers: [userProcessorJobLayers],
       timeout: Duration.minutes(15),
+      environment: {
+        USERS_QUEUE_URL: usersQueue.queueUrl,
+      }
     });
 
     const apiAuthorizer = new PythonFunction(this, 'dm_api_authorizer', {
@@ -111,7 +120,7 @@ export class DatabaseMigrationCdkStackStack extends Stack {
     //usersQueue give permission to pollUsersFromQueue
     usersQueue.grantConsumeMessages(pollUsersFromQueue);
     usersQueue.grantPurge(userProcessorJob);
-    
+    usersQueue.grantSendMessages(usersQueueConsumer)
     //userProcessorJob give permission to usersQueueConsumer
 
     

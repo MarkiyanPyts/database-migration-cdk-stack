@@ -1,6 +1,12 @@
 import json
+import boto3
+import os
+
+sqs = boto3.client('sqs')
+
 
 def handler(event, context):
+    USERS_QUEUE_URL = os.getenv('USERS_QUEUE_URL', '')
     try:
         # Extract 'users' from body parameters
         body = json.loads(event.get('body'))
@@ -12,6 +18,15 @@ def handler(event, context):
         
         # Log the users for debugging purposes
         print("Received users: " + json.dumps(users))
+
+        users_sent = []
+        # Send a message to the queue for each user
+        for user_id in users:
+            response = sqs.send_message(
+                QueueUrl=USERS_QUEUE_URL,
+                MessageBody=json.dumps({"user_id": user_id})
+            )
+            users_sent.append({"user_id": user_id, "sqs_message_id": response.get('MessageId')})
         
         # Prepare a response
         response = {
@@ -20,8 +35,8 @@ def handler(event, context):
                 "Content-Type": "application/json"
             },
             "body": json.dumps({
-                "message": "Hello from usersQueueConsumer",
-                "receivedUsers": users
+                "message": "Sent users to queue",
+                "users_sent": users_sent
             })
         }
 
@@ -29,12 +44,12 @@ def handler(event, context):
         # Handle any JSON parsing or missing data errors
         print(f"Error parsing event: {str(e)}")
         response = {
-            "statusCode": 400,
+            "statusCode": 500,
             "headers": {
                 "Content-Type": "application/json"
             },
             "body": json.dumps({
-                "message": "Error processing the event",
+                "message": "Error submitting users to queue",
                 "error": str(e)
             })
         }
