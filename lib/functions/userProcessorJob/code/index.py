@@ -8,10 +8,24 @@ def handler(event, context):
     USERS_QUEUE_URL = os.getenv('USERS_QUEUE_URL', '')
     
     try:
-        print('event:')
-        print(event)
-        print('context:')
-        print(context)
+        event_details = event['detail']
+        
+
+        sqs_receipt_handle = event_details['ReceiptHandle']
+        sqs_message_id = event_details['MessageId']
+        user_data = event_details['Body']
+        print('sqs_receipt_handle:')
+        print(sqs_receipt_handle)
+        print('sqs_message_id:')
+        print(sqs_message_id)
+        print('user_id:')
+        print(user_data['user_id'])
+
+        ## do migration for this user...if transaction was success delete SQS message
+        sqs.delete_message(
+            QueueUrl=USERS_QUEUE_URL,
+            ReceiptHandle=sqs_receipt_handle
+        )
         
         # Prepare a response
         response = {
