@@ -24,10 +24,8 @@ def handler(event, context):
             print(f"Received users: {response}")
             if  ('Messages' in response) and len(response['Messages']) > 0:
                 message = response['Messages'][0]
-                print(f"Received message: {message}")
                 message_json = json.dumps(message)
-                # receipt_handle = message['ReceiptHandle']
-                print('json', message_json)
+
                 send_event_response = eventsClient.put_events(
                     Entries=[
                         {
