@@ -29,7 +29,7 @@ export class DatabaseMigrationCdkStackStack extends Stack {
 
     const usersQueue = new aws_sqs.Queue(this, 'dm_users_queue', {
       removalPolicy: RemovalPolicy.DESTROY,
-      visibilityTimeout: Duration.minutes(15),
+      visibilityTimeout: Duration.minutes(1),
       deadLetterQueue: {
         maxReceiveCount: 1,
         queue: usersDLQ

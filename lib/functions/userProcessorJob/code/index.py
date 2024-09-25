@@ -1,6 +1,12 @@
 import json
+import boto3
+import os
+
+sqs = boto3.client('sqs')
 
 def handler(event, context):
+    USERS_QUEUE_URL = os.getenv('USERS_QUEUE_URL', '')
+    
     try:
         # Extract 'users' from body parameters
         body = json.loads(event.get('body'))

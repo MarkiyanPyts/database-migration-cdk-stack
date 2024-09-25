@@ -1,17 +1,27 @@
 import json
+import boto3
+import os
+
+sqs = boto3.client('sqs')
+
 
 def handler(event, context):
+    USERS_QUEUE_URL = os.getenv('USERS_QUEUE_URL', '')
     try:
-        # Extract 'users' from body parameters
-        body = json.loads(event.get('body'))
-        users = body.get('users')
+        response = sqs.receive_message(
+            QueueUrl=USERS_QUEUE_URL,
+            AttributeNames=[
+                'SentTimestamp'
+            ],
+            MaxNumberOfMessages=10,
+            MessageAttributeNames=[
+                'All'
+            ],
+            WaitTimeSeconds=5
+        )
 
-        # Check if 'users' is empty
-        if not users:
-            raise ValueError("No users provided")
-        
-        # Log the users for debugging purposes
-        print("Received users: " + json.dumps(users))
+        message = response['Messages'][0]
+        receipt_handle = message['ReceiptHandle']
         
         # Prepare a response
         response = {
@@ -20,8 +30,8 @@ def handler(event, context):
                 "Content-Type": "application/json"
             },
             "body": json.dumps({
-                "message": "Hello from usersQueueConsumer",
-                "receivedUsers": users
+                "message": "Successfully polled users",
+                "receivedUsers": response['Messages']
             })
         }
 
