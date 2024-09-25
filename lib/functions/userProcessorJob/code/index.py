@@ -8,11 +8,10 @@ def handler(event, context):
     USERS_QUEUE_URL = os.getenv('USERS_QUEUE_URL', '')
     
     try:
-        # Extract 'users' from body parameters
-        body = json.loads(event.get('body'))
-        
-        # Log the users for debugging purposes
-        print("Job data: " + json.dumps(body))
+        print('event:')
+        print(event)
+        print('context:')
+        print(context)
         
         # Prepare a response
         response = {
@@ -22,7 +21,6 @@ def handler(event, context):
             },
             "body": json.dumps({
                 "message": "triggered jobs for users:",
-                "users": body
             })
         }
 

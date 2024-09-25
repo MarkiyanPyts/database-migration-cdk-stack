@@ -50,7 +50,7 @@ export class DatabaseMigrationCdkStackStack extends Stack {
     })
 
     const userProcessorJob = new PythonFunction(this, 'dm_user_processor_job', {
-      entry: path.join(__dirname, './functions/usersQueueConsumer/code'),
+      entry: path.join(__dirname, './functions/userProcessorJob/code'),
       runtime: aws_lambda.Runtime.PYTHON_3_12, // required
       handler: 'handler',
       layers: [userProcessorJobLayers],
@@ -120,11 +120,11 @@ export class DatabaseMigrationCdkStackStack extends Stack {
     
 
 
-    //usersQueue give permission to pollUsersFromQueue
+
     usersQueue.grantConsumeMessages(pollUsersFromQueue);
     usersQueue.grantPurge(userProcessorJob);
     usersQueue.grantSendMessages(usersQueueConsumer)
-    //userProcessorJob give permission to usersQueueConsumer
+   
 
     
   }

@@ -19,23 +19,26 @@ def handler(event, context):
             response = sqs.receive_message(
                 QueueUrl=USERS_QUEUE_URL,
                 MaxNumberOfMessages=1,
+                WaitTimeSeconds=2
             )
             print(f"Received users: {response}")
-            if response['Messages'] and len(response['Messages']) > 0:
+            if  ('Messages' in response) and len(response['Messages']) > 0:
                 message = response['Messages'][0]
-                
+                print(f"Received message: {message}")
+                message_json = json.dumps(message)
                 # receipt_handle = message['ReceiptHandle']
-
+                print('json', message_json)
                 send_event_response = eventsClient.put_events(
                     Entries=[
                         {
                             'Source': EVENT_SOURCE,
-                            'Detail': json.dumps(message),
+                            'Detail': message_json,
                             'EventBusName': EVENT_BUS_NAME,
+                            'DetailType': 'SQSUserMessage'
                         },
                     ],
                 )
-                print('send_event_response:' + send_event_response)
+                print(send_event_response)
                 array_of_started_jobs.append(message)
                 polled_messages += 1
             else:
