@@ -22,11 +22,12 @@ def handler(event, context):
         print(user_data['user_id'])
 
         ## do migration for this user...if transaction was success delete SQS message
-        sqs.delete_message(
+        message_delete_response = sqs.delete_message(
             QueueUrl=USERS_QUEUE_URL,
             ReceiptHandle=sqs_receipt_handle
         )
-        
+        print("message_delete_response:")
+        print(message_delete_response)
         # Prepare a response
         response = {
             "statusCode": 200,
